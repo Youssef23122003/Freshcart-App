@@ -27,7 +27,7 @@ export default function WishlistContextProvider(props) {
         })
     }
     async function removeProductFromWishlist(id){
-        return await axios.delete(`https:ecommerce.routemisr.com/api/v1/wishlist/${id}`,{headers}).then((resp)=>{console.log(resp);
+        return await axios.delete(`https:ecommerce.routemisr.com/api/v1/wishlist/${id}`,{headers:headers}).then((resp)=>{console.log(resp);
         // setuserWishlistProducts(resp.data.data)
         getfromWishlist()
         toast.success('Product is removed Successfully ', { position: "top-right" });
