@@ -19,7 +19,7 @@ let {setuserLogin}=  useContext(UserContext)
 let navigate= useNavigate()
 
   let valdiation= Yup.object().shape({
-    name:Yup.string().min(3 ,'min letters 3').max(5 , 'max 5').required('name is required'),
+    name:Yup.string().min(3 ,'min letters 3').max(5 , 'max 10').required('name is required'),
     email: Yup.string().email('invalid mail').required('mail is required'),
     phone:Yup.string().matches(/^01[0125][0-9]{8}$/ , 'invalid phone').required('phone is required'),
     password:Yup.string().matches(/^[A-Z][a-z0-9]{3,8}$/ , 'invalid password').required('password is required'),
