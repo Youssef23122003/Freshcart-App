@@ -4,140 +4,124 @@ import Loader from '../Loader/Loader';
 import { CartContext } from '../../context/CartContext';
 import toast from 'react-hot-toast';
 import { Helmet } from 'react-helmet';
+import { Link } from 'react-router-dom';
 
 export default function Wishlist() {
-  let { getfromWishlist, wishlistProducts, removeProductFromWishlist } = useContext(WishlistContext)
-  let { addToCart } = useContext(CartContext)
-  const [loadingStates, setLoadingStates] = useState({
-    cart: {},
-    remove: {}
-  });
-  
-  useEffect(() => { getfromWishlist() }, [])
+    let { getfromWishlist, wishlistProducts, removeProductFromWishlist } = useContext(WishlistContext)
+    let { addToCart } = useContext(CartContext)
+    const [loading, setLoading] = useState(true)
 
-  async function addProducrToCart(id) {
-    setLoadingStates(prev => ({
-      ...prev,
-      cart: { ...prev.cart, [id]: true }
-    }));
-    
-    let { data } = await addToCart(id)
-    
-    setLoadingStates(prev => ({
-      ...prev,
-      cart: { ...prev.cart, [id]: false }
-    }));
+    useEffect(() => {
+        getfromWishlist()
+        setLoading(false)
+    }, [])
 
-    if (data.status == 'success') {
-      toast.success(data.message, {
-        position: "top-right",
-      })
-    } else {
-      toast.error(data.message, {
-        position: "top-right",
-      })
+    async function addProducrToCart(id) {
+        let { data } = await addToCart(id)
+        if (data.status == 'success') {
+            toast.success(data.message, {
+                position: "top-right",
+            })
+        } else {
+            toast.error(data.message, {
+                position: "top-right",
+            })
+        }
     }
-  }
 
-  async function handleRemove(id) {
-    setLoadingStates(prev => ({
-      ...prev,
-      remove: { ...prev.remove, [id]: true }
-    }));
-    
-    await removeProductFromWishlist(id);
-    
-    setLoadingStates(prev => ({
-      ...prev,
-      remove: { ...prev.remove, [id]: false }
-    }));
-  }
+    async function removeProduct(id) {
+        try {
+            const { data } = await removeProductFromWishlist(id)
+            if (data.status === 'success') {
+                toast.success('Product removed from wishlist')
+                await getfromWishlist()
+            }
+        } catch (error) {
+            toast.error('Error removing product from wishlist')
+        }
+    }
 
-  return (
-    <>
-      <div className="application">
-        <Helmet>
-          <title>Freshcart Wishlist</title>
-        </Helmet>
-      </div>
-      <h1 className='text-3xl text-red-800 py-5'>My Wishlist</h1>
-      <div className="relative overflow-x-auto shadow-md sm:rounded-lg">
-        <table className="w-full text-sm text-left rtl:text-right text-gray-500 dark:text-gray-400">
-          <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
-            <tr>
-              <th scope="col" className="px-4 md:px-16 py-3">
-                <span className="sr-only">Image</span>
-              </th>
-              <th scope="col" className="px-4 md:px-6 py-3">Product</th>
-              <th scope="col" className="px-4 md:px-6 py-3">Delete</th>
-              <th scope="col" className="px-4 md:px-6 py-3">Price</th>
-              <th scope="col" className="px-4 md:px-6 py-3">Add</th>
-            </tr>
-          </thead>
-          {wishlistProducts.length > 0 ? (
-            <tbody>
-              {wishlistProducts.map((prod) => (
-                <tr
-                  key={prod.id}
-                  className="bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600"
-                >
-                  <td className="p-2 md:p-4">
-                    <img
-                      src={prod.imageCover}
-                      className="w-full lg:w-32 lg:h-32 max-w-full max-h-full object-cover"
-                      alt={prod?.title || 'Product Image'}
-                    />
-                  </td>
+    if (loading) {
+        return (
+            <div className="flex justify-center items-center min-h-screen">
+                <Loader />
+            </div>
+        )
+    }
 
-                  <td className="px-4 md:px-6 py-4 font-semibold text-gray-900 dark:text-white text-xs md:text-sm lg:text-base">
-                    {prod?.title?.split(' ').slice(0, 2).join(' ')}
-                  </td>
+    if (!wishlistProducts?.length) {
+        return (
+            <div className="container mx-auto px-4 py-8">
+                <Helmet>
+                    <title>Freshcart - Wishlist</title>
+                </Helmet>
+                <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                    <i className="fa-solid fa-heart text-6xl text-gray-300 mb-4"></i>
+                    <h2 className="text-2xl font-bold mb-4">Your wishlist is empty</h2>
+                    <p className="text-gray-600 mb-6">Add items to your wishlist to see them here</p>
+                    <Link to="/products" className="btn bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md transition-all">
+                        Continue Shopping
+                    </Link>
+                </div>
+            </div>
+        )
+    }
 
-                  <td className="px-4 md:px-6 py-4">
-                    <div className="flex items-center justify-center">
-                      <button
-                        onClick={() => handleRemove(prod.id)}
-                        className="bg-red-800 text-white px-2 md:px-4 py-2 md:py-4 rounded-md text-xs md:text-sm lg:text-base"
-                        disabled={loadingStates.remove[prod.id]}
-                      >
-                        {loadingStates.remove[prod.id] ? (
-                          <i className="fas fa-spinner fa-spin"></i>
-                        ) : (
-                          <>
-                            <i className="fa-solid fa-trash"></i> Remove
-                          </>
-                        )}
-                      </button>
+    return (
+        <div className="container mx-auto px-4 py-8">
+            <Helmet>
+                <title>Freshcart - Wishlist</title>
+            </Helmet>
+            <div className="flex items-center justify-between mb-8">
+                <h2 className="text-3xl font-bold">My Wishlist</h2>
+                <span className="text-gray-600">{wishlistProducts.length} items</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {wishlistProducts?.map((prod) => (
+                    <div key={prod._id} className="bg-white rounded-lg shadow-md hover:shadow-lg transition-all duration-300 overflow-hidden">
+                        <div className="relative group">
+                            <Link to={`/productDetails/${prod._id}/${prod.category.name}`}>
+                                <img 
+                                    src={prod.imageCover} 
+                                    className="w-full object-cover transition-transform duration-300 group-hover:scale-105" 
+                                    alt={prod.title}
+                                />
+                            </Link>
+                            <button
+                                onClick={() => removeProduct(prod._id)}
+                                className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-red-50 transition-colors"
+                            >
+                                <i className="fa-solid fa-heart text-red-500 text-xl"></i>
+                            </button>
+                        </div>
+                        <div className="p-4">
+                            <Link to={`/productDetails/${prod._id}/${prod.category.name}`}>
+                                <span className="text-green-600 text-sm font-medium">{prod.category.name}</span>
+                                <h3 className="text-lg font-semibold mt-2 mb-2 line-clamp-2">
+                                    {prod.title}
+                                </h3>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xl font-bold text-gray-900">{prod.price} EGP</span>
+                                    <div className="flex items-center">
+                                        <span className="text-yellow-400 mr-1">
+                                            <i className="fas fa-star"></i>
+                                        </span>
+                                        <span className="text-gray-600">{prod.ratingsAverage}</span>
+                                    </div>
+                                </div>
+                            </Link>
+                            <button
+                                onClick={() => addProducrToCart(prod._id)}
+                                className="w-full mt-4 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition-colors"
+                            >
+                                Add To Cart
+                            </button>
+                        </div>
                     </div>
-                  </td>
-
-                  <td className="px-4 md:px-6 py-4 font-semibold text-gray-900 dark:text-white text-xs md:text-sm lg:text-base">
-                    ${prod.price}
-                  </td>
-
-                  <td className="px-4 md:px-6 py-4">
-                    <button
-                      onClick={() => addProducrToCart(prod.id)}
-                      className="bg-green-500 text-white px-2 md:px-4 py-2 md:py-4 rounded-md text-xs md:text-sm lg:text-base"
-                      disabled={loadingStates.cart[prod.id]}
-                    >
-                      {loadingStates.cart[prod.id] ? (
-                        <i className="fas fa-spinner fa-spin"></i>
-                      ) : (
-                        'Add To Cart'
-                      )}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          ) : (
-            <Loader />
-          )}
-        </table>
-      </div>
-    </>
-  );
+                ))}
+            </div>
+        </div>
+    );
 }
 
 
